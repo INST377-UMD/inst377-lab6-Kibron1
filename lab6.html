@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<head>
+    <title>Lab6</title>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+<body>
+<h1>US Map</h1>
+
+<div id="map" style="width: 1200px; height: 500px;"></div>
+<p id="marker1">Marker 1: Latitude: , Longitude: </p>
+<p id="marker2">Marker 2: Latitude: , Longitude: </p>
+<p id="marker3">Marker 3: Laitude: , Longitude: </p>
+<script>
+    function getRandomInRange(from, to, fixed) {
+        return (Math.random() * (to - from) + from).toFixed(fixed) * 1;
+    }
+    var markerCoordinates = [];
+    for (let x = 0; x < 3; x++) {
+        var lat = getRandomInRange(30, 35, 3);
+        var long = getRandomInRange(-90, -100, 3);
+        markerCoordinates.push([lat, long]);
+    }
+
+    async function getData(arrayObj) {
+        let latitude = arrayObj[0].toString();
+        let longitude = arrayObj[1].toString();
+        var data = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+        data = await data.json();
+        return data.locality || "Unknown";
+    }
+
+    async function createMap() {
+        var map = L.map('map').setView([32, -95], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        markerCoordinates.forEach(async (latLong, index) => {
+            var marker = L.marker(latLong).addTo(map);
+            var markerArea = document.getElementById(`marker${index + 1}`);
+            markerArea.innerHTML = `Marker ${index + 1}: Latitude: ${latLong[0]}, Longitude: ${latLong[1]}`;
+            
+            // Call getData for locality
+            var area = await getData(latLong);
+            markerArea.innerHTML += `<br>Locality: ${area}`;
+        });
+    }
+
+    window.onload = createMap;
+</script>
+
+</body>
+</html>
